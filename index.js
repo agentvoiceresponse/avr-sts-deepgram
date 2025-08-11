@@ -90,7 +90,7 @@ app.post("/speech-to-speech-stream", async (req, res) => {
       res.end();
     } catch (_) {}
     try {
-      connection.close && connection.close();
+      connection.disconnect();
     } catch (_) {
       console.error("Error closing connection:", _);
     }
