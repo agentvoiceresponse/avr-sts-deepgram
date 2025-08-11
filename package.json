@@ -1,0 +1,33 @@
+{
+  "name": "avr-sts-deepgram",
+  "version": "1.0.0",
+  "author": "Agent Voice Response <info@agentvoiceresponse.com>",
+  "description": "Deepgram Speech-to-Speech service for Agent Voice Response",
+  "main": "index.js",
+  "scripts": {
+    "start": "node .",
+    "start:dev": "nodemon --inspect ./index.js",
+    "dc:build": "docker build --platform=linux/amd64 -t agentvoiceresponse/avr-sts-deepgram:latest -t agentvoiceresponse/avr-sts-deepgram:${npm_package_version} .",
+    "dc:push": "docker push agentvoiceresponse/avr-sts-deepgram:latest && docker push agentvoiceresponse/avr-sts-deepgram:${npm_package_version}"
+  },
+  "dependencies": {
+    "@deepgram/sdk": "^4.4.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "contributors": [
+    {
+      "name": "Giuseppe Careri",
+      "email": "info@gcareri.com",
+      "url": "https://github.com/gcareri"
+    },
+    {
+      "name": "Mirko Bertone",
+      "email": "bertonemirko@gmail.com",
+      "url": "https://github.com/mirkobertone"
+    }
+  ]
+}
