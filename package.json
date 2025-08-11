@@ -11,7 +11,7 @@
     "dc:push": "docker push agentvoiceresponse/avr-sts-deepgram:latest && docker push agentvoiceresponse/avr-sts-deepgram:${npm_package_version}"
   },
   "dependencies": {
-    "@deepgram/sdk": "^4.4.0",
+    "@deepgram/sdk": "^4.11.2",
     "dotenv": "^16.5.0",
     "express": "^5.1.0"
   },
