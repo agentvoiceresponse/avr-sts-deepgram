@@ -16,6 +16,8 @@
 
 const WebSocket = require("ws");
 const { createClient, AgentEvents } = require("@deepgram/sdk");
+const { loadTools, getToolHandler } = require("./loadTools");
+
 require("dotenv").config();
 
 if (!process.env.DEEPGRAM_API_KEY) {
@@ -100,7 +102,7 @@ const handleClientConnection = (clientWs) => {
     connection.on(AgentEvents.Welcome, () => {
       console.log("Configuring Deepgram agent...");
 
-      connection.configure({
+      let obj = {
         audio: {
           input: {
             encoding: "linear16",
@@ -137,9 +139,18 @@ const handleClientConnection = (clientWs) => {
             process.env.DEEPGRAM_GREETING ||
             "Hi there, I'm your virtual assistant—how can I help today?",
         },
-      });
+      };
 
-      console.log("Deepgram agent configured");
+      try {
+        obj.agent.think.functions = loadTools();
+        console.log(`Loaded ${obj.agent.think.functions.length} tools for Deepgram`);
+      } catch (error) {
+        console.error(`Error loading tools for Deepgram: ${error.message}`);
+      }
+
+      connection.configure(obj);
+
+      console.log("Deepgram agent configured", obj);
 
       // Start keep alive
       keepAliveIntervalId = setInterval(() => {
@@ -172,6 +183,40 @@ const handleClientConnection = (clientWs) => {
 
     connection.on(AgentEvents.UserStartedSpeaking, () => {
       clientWs.send(JSON.stringify({ type: "interruption" }));
+    });
+
+    connection.on(AgentEvents.FunctionCallRequest, async (data) => {
+      console.log("Deepgram agent function call request", data);
+      for (const func of data.functions) {
+        const handler = getToolHandler(func.name);
+
+        if (!handler) {
+          console.error(`No handler found for tool: ${func.name}`);
+          continue;
+        }
+        
+        try {
+          const content = await handler(
+            sessionUuid,
+            JSON.parse(func.arguments)
+          );
+          console.log("Tool response:", content);
+          connection.send(JSON.stringify({
+            type: "FunctionCallResponse",
+            id: func.id,
+            name: func.name,
+            content
+          }));
+        } catch (error) {
+          console.error(`Error executing tool ${func.name}:`, error);
+          connection.send(JSON.stringify({
+            type: "FunctionCallResponse",
+            id: func.id,
+            name: func.name,
+            content: error.message
+          }));
+        }
+      }
     });
 
     connection.on(AgentEvents.Error, (err) => {
