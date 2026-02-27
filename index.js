@@ -33,6 +33,21 @@ const SAMPLE_RATE = Number(process.env.DEEPGRAM_SAMPLE_RATE || 8000);
 // Agent system prompt from environment variable
 const AGENT_PROMPT = process.env.AGENT_PROMPT;
 
+function safeSend(ws, payload) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    return;
+  }
+
+  const data =
+    typeof payload === "string" ? payload : JSON.stringify(payload);
+
+  try {
+    ws.send(data);
+  } catch (error) {
+    console.error("Error sending WebSocket message to client:", error);
+  }
+}
+
 /**
  * Creates and configures a Deepgram agent connection.
  *
@@ -53,13 +68,27 @@ const handleClientConnection = (clientWs) => {
   let sessionUuid = null;
   let connection = null;
   let keepAliveIntervalId = null;
+  let isCleanedUp = false;
 
   function cleanup() {
+    if (isCleanedUp) return;
+    isCleanedUp = true;
+
     if (keepAliveIntervalId) clearInterval(keepAliveIntervalId);
     if (connection) {
-      connection.disconnect();
+      try {
+        connection.disconnect();
+      } catch (error) {
+        console.error("Error disconnecting Deepgram agent:", error);
+      }
     }
-    if (clientWs) clientWs.close();
+    if (clientWs && clientWs.readyState === WebSocket.OPEN) {
+      try {
+        clientWs.close();
+      } catch (error) {
+        console.error("Error closing client WebSocket:", error);
+      }
+    }
   }
 
   // Handle client WebSocket messages
@@ -78,7 +107,11 @@ const handleClientConnection = (clientWs) => {
           // Handle audio data from client
           if (message.audio && connection) {
             const audioBuffer = Buffer.from(message.audio, "base64");
-            connection.send(audioBuffer);
+            try {
+              connection.send(audioBuffer);
+            } catch (error) {
+              console.error("Error sending audio to Deepgram agent:", error);
+            }
           }
           break;
 
@@ -115,7 +148,7 @@ const handleClientConnection = (clientWs) => {
           },
         },
         agent: {
-          language: "en",
+          language: process.env.DEEPGRAM_LANGUAGE || "en",
           listen: {
             provider: {
               type: "deepgram",
@@ -159,22 +192,18 @@ const handleClientConnection = (clientWs) => {
     });
 
     connection.on(AgentEvents.ConversationText, (data) => {
-      clientWs.send(
-        JSON.stringify({
-          type: "transcript",
-          role: data.role == 'user' ? 'user' : 'agent',
-          text: data.content,
-        })
-      );
+      safeSend(clientWs, {
+        type: "transcript",
+        role: data.role == "user" ? "user" : "agent",
+        text: data.content,
+      });
     });
 
     connection.on(AgentEvents.Audio, (data) => {
-      clientWs.send(
-        JSON.stringify({
-          type: "audio",
-          audio: data.toString("base64"),
-        })
-      );
+      safeSend(clientWs, {
+        type: "audio",
+        audio: data.toString("base64"),
+      });
     });
 
     connection.on(AgentEvents.AgentAudioDone, () => {
@@ -182,7 +211,7 @@ const handleClientConnection = (clientWs) => {
     });
 
     connection.on(AgentEvents.UserStartedSpeaking, () => {
-      clientWs.send(JSON.stringify({ type: "interruption" }));
+      safeSend(clientWs, { type: "interruption" });
     });
 
     connection.on(AgentEvents.FunctionCallRequest, async (data) => {
@@ -221,12 +250,10 @@ const handleClientConnection = (clientWs) => {
 
     connection.on(AgentEvents.Error, (err) => {
       console.error("Deepgram agent error:", err?.message || err);
-      clientWs.send(
-        JSON.stringify({
-          type: "error",
-          message: err?.message || "Deepgram agent error",
-        })
-      );
+      safeSend(clientWs, {
+        type: "error",
+        message: err?.message || "Deepgram agent error",
+      });
       cleanup();
     });
 
@@ -250,10 +277,29 @@ const handleClientConnection = (clientWs) => {
 
 // Start the server
 const startServer = () => {
+  let wss;
+  let isShuttingDown = false;
+
+  const shutdown = () => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+
+    console.log("Shutting down WebSocket server...");
+
+    if (wss) {
+      wss.close(() => {
+        console.log("WebSocket server closed");
+        process.exit(0);
+      });
+    } else {
+      process.exit(0);
+    }
+  };
+
   try {
     // Create WebSocket server
     const PORT = process.env.PORT || 6033;
-    const wss = new WebSocket.Server({ port: PORT });
+    wss = new WebSocket.Server({ port: PORT });
 
     wss.on("connection", (clientWs) => {
       console.log("New client connected");
@@ -263,6 +309,9 @@ const startServer = () => {
     console.log(
       `Deepgram Speech-to-Speech WebSocket server running on port ${PORT}`
     );
+
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);

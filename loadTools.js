@@ -17,6 +17,7 @@ function loadTools() {
     if (!fs.existsSync(dirPath)) return [];
     
     return fs.readdirSync(dirPath)
+      .filter(file => file.endsWith('.js'))
       .map(file => {
         const tool = require(path.join(dirPath, file));
         return {
@@ -48,17 +49,19 @@ function loadTools() {
  * @throws {Error} If the tool is not found
  */
 function getToolHandler(name) {
+  const safeName = String(name).replace(/[^a-zA-Z0-9_-]/g, '');
+
   // Possible paths for the tool file
   const possiblePaths = [
-    path.join(__dirname, 'avr_tools', `${name}.js`),  // First check in avr_tools
-    path.join(__dirname, 'tools', `${name}.js`)       // Then check in tools
+    path.join(__dirname, 'avr_tools', `${safeName}.js`),  // First check in avr_tools
+    path.join(__dirname, 'tools', `${safeName}.js`)       // Then check in tools
   ];
 
   // Find the first valid path
-  const toolPath = possiblePaths.find(path => fs.existsSync(path));
+  const toolPath = possiblePaths.find(candidatePath => fs.existsSync(candidatePath));
   
   if (!toolPath) {
-    throw new Error(`Tool "${name}" not found in any available directory`);
+    throw new Error(`Tool "${safeName}" not found in any available directory`);
   }
 
   const tool = require(toolPath);
