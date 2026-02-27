@@ -138,33 +138,33 @@ const handleClientConnection = (clientWs) => {
       let obj = {
         audio: {
           input: {
-            encoding: "linear16",
-            sample_rate: SAMPLE_RATE,
+            encoding: process.env.DEEPGRAM_INPUT_ENCODING || "linear16",
+            sample_rate: Number(process.env.DEEPGRAM_INPUT_SAMPLE_RATE || SAMPLE_RATE),
           },
           output: {
-            encoding: "linear16",
-            sample_rate: SAMPLE_RATE,
-            container: "none",
+            encoding: process.env.DEEPGRAM_OUTPUT_ENCODING || "linear16",
+            sample_rate: Number(process.env.DEEPGRAM_OUTPUT_SAMPLE_RATE || SAMPLE_RATE),
+            container: process.env.DEEPGRAM_OUTPUT_CONTAINER || "none",
           },
         },
         agent: {
           language: process.env.DEEPGRAM_LANGUAGE || "en",
           listen: {
             provider: {
-              type: "deepgram",
+              type: process.env.DEEPGRAM_LISTEN_PROVIDER || "deepgram",
               model: process.env.DEEPGRAM_ASR_MODEL || "nova-3",
             },
           },
           think: {
             provider: {
-              type: "open_ai",
-              model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+              type: process.env.DEEPGRAM_THINK_PROVIDER || "open_ai",
+              model: process.env.DEEPGRAM_THINK_MODEL || "gpt-4o-mini",
             },
             prompt: AGENT_PROMPT,
           },
           speak: {
             provider: {
-              type: "deepgram",
+              type: process.env.DEEPGRAM_SPEAK_PROVIDER || "deepgram",
               model: process.env.DEEPGRAM_TTS_MODEL || "aura-2-thalia-en",
             },
           },
@@ -185,10 +185,10 @@ const handleClientConnection = (clientWs) => {
 
       console.log("Deepgram agent configured", obj);
 
-      // Start keep alive
+      const keepAliveMs = Number(process.env.DEEPGRAM_KEEPALIVE_INTERVAL || 5000);
       keepAliveIntervalId = setInterval(() => {
         connection.keepAlive();
-      }, 5000);
+      }, keepAliveMs);
     });
 
     connection.on(AgentEvents.ConversationText, (data) => {
