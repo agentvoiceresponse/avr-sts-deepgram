@@ -125,7 +125,7 @@ const handleClientConnection = (clientWs) => {
           think: {
             provider: {
               type: process.env.DEEPGRAM_THINK_PROVIDER || "open_ai",
-              model: process.env.DEEPGRAM_THINK_MODEL || "gpt-4o-mini",
+              model: process.env.DEEPGRAM_THINK_MODEL || process.env.OPENAI_MODEL || "gpt-4o-mini",
             },
             prompt: AGENT_PROMPT,
           },
