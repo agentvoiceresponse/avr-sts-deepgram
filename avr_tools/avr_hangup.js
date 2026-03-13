@@ -1,8 +1,11 @@
+require("dotenv").config();
+
 const axios = require("axios");
 
 module.exports = {
   name: "avr_hangup",
-  description: "Ends the current call session when requested by the agent.",
+  description:
+    "Ends the conversation once the maintenance is booked or if no availability is found.",
   input_schema: {
     type: "object",
     properties: {},

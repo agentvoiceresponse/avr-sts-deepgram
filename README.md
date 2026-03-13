@@ -32,71 +32,32 @@ npm install
 
 ### 3. Configure Environment Variables
 
-Create a `.env` file in the root of the project (see `.env.example`). The following variables are available:
+Create a `.env` file in the root of the project to store your API keys and configuration. You will need to add the following variables:
 
-**Required:**
+```bash
+DEEPGRAM_API_KEY=your_deepgram_api_key
+AGENT_PROMPT="Your custom agent prompt here..."
+PORT=6033
+DEEPGRAM_SAMPLE_RATE=8000
+DEEPGRAM_ASR_MODEL=nova-3
+DEEPGRAM_TTS_MODEL=aura-2-thalia-en
+DEEPGRAM_GREETING="Hi there, I'm your virtual assistant—how can I help today?"
+OPENAI_MODEL=gpt-4o-mini
+```
 
-| Variable | Description |
-|---|---|
-| `DEEPGRAM_API_KEY` | Your Deepgram API key |
-| `AGENT_PROMPT` | System prompt that defines the AI agent's behavior and personality |
+**Required Variables:**
 
-**Optional -- Server:**
+- `DEEPGRAM_API_KEY`: Your Deepgram API key
+- `AGENT_PROMPT`: The system prompt for the AI agent behavior
 
-| Variable | Description | Default |
-|---|---|---|
-| `PORT` | WebSocket server port | `6033` |
+**Optional Variables:**
 
-**Optional -- Audio Input:**
-
-| Variable | Description | Default |
-|---|---|---|
-| `DEEPGRAM_SAMPLE_RATE` | Fallback sample rate used when input/output specific rates are not set | `8000` |
-| `DEEPGRAM_INPUT_ENCODING` | Audio encoding for the input stream (`linear16`, `mulaw`, `alaw`) | `linear16` |
-| `DEEPGRAM_INPUT_SAMPLE_RATE` | Sample rate in Hz for the input stream | Value of `DEEPGRAM_SAMPLE_RATE` |
-
-**Optional -- Audio Output:**
-
-| Variable | Description | Default |
-|---|---|---|
-| `DEEPGRAM_OUTPUT_ENCODING` | Audio encoding for the output stream (`linear16`, `mulaw`, `alaw`) | `linear16` |
-| `DEEPGRAM_OUTPUT_SAMPLE_RATE` | Sample rate in Hz for the output stream | Value of `DEEPGRAM_SAMPLE_RATE` |
-| `DEEPGRAM_OUTPUT_CONTAINER` | Output audio container format (`none`, `wav`) | `none` |
-
-**Optional -- Agent:**
-
-| Variable | Description | Default |
-|---|---|---|
-| `DEEPGRAM_LANGUAGE` | Agent language code (e.g. `en`, `it`, `es`, `fr`, `de`) | `en` |
-| `DEEPGRAM_GREETING` | Initial greeting message spoken by the agent | `Hi there, I'm your virtual assistant—how can I help today?` |
-
-**Optional -- Listen (STT) Provider:**
-
-| Variable | Description | Default |
-|---|---|---|
-| `DEEPGRAM_LISTEN_PROVIDER` | Speech-to-text provider (`deepgram`) | `deepgram` |
-| `DEEPGRAM_ASR_MODEL` | STT model name | `nova-3` |
-
-**Optional -- Think (LLM) Provider:**
-
-| Variable | Description | Default |
-|---|---|---|
-| `DEEPGRAM_THINK_PROVIDER` | LLM provider (`open_ai`, `anthropic`, `groq`, `google`) | `open_ai` |
-| `DEEPGRAM_THINK_MODEL` | LLM model name | `gpt-4o-mini` |
-
-**Optional -- Speak (TTS) Provider:**
-
-| Variable | Description | Default |
-|---|---|---|
-| `DEEPGRAM_SPEAK_PROVIDER` | Text-to-speech provider (`deepgram`, `eleven_labs`) | `deepgram` |
-| `DEEPGRAM_TTS_MODEL` | TTS model name | `aura-2-thalia-en` |
-
-**Optional -- Advanced:**
-
-| Variable | Description | Default |
-|---|---|---|
-| `DEEPGRAM_KEEPALIVE_INTERVAL` | Keep-alive ping interval in milliseconds | `5000` |
-| `AMI_URL` | URL of the AMI service used by call-control tools (`avr_transfer`, `avr_hangup`) | `http://127.0.0.1:6006` |
+- `PORT`: Server port (default: 6033)
+- `DEEPGRAM_SAMPLE_RATE`: Audio sample rate (default: 8000)
+- `DEEPGRAM_ASR_MODEL`: Speech recognition model (default: nova-3)
+- `DEEPGRAM_TTS_MODEL`: Text-to-speech model (default: aura-2-thalia-en)
+- `DEEPGRAM_GREETING`: Initial greeting message
+- `OPENAI_MODEL`: OpenAI model for responses (default: gpt-4o-mini)
 
 ### 4. Running the Application
 
@@ -114,18 +75,18 @@ The **Agent Voice Response** system integrates with Deepgram's Speech-to-Speech 
 
 ### Key Components
 
-- **WebSocket Server**: Handles incoming audio streams from clients
-- **Deepgram Agent API**: Manages real-time communication with Deepgram's Voice Agent
+- **Express.js Server**: Handles incoming audio streams from clients
+- **WebSocket Communication**: Manages real-time communication with Deepgram's API
 - **Audio Processing**: Handles audio format conversion and streaming
 - **Real-time Streaming**: Processes and streams audio data in real-time
 
 ### Audio Processing
 
-Default audio configuration (configurable via environment variables):
+The application is configured to work with:
 
-- **Input Audio**: Linear16 at 8 kHz
-- **Output Audio**: Linear16 at 8 kHz, no container
-- Input and output encoding, sample rate, and container can be set independently
+- **Input Audio**: 16-bit PCM at 8kHz
+- **Output Audio**: 16-bit PCM at 8kHz
+- **Encoding**: Linear16 format
 
 ## API Endpoints
 
@@ -147,7 +108,23 @@ This endpoint accepts an audio stream and returns a streamed audio response gene
 
 ## Customizing the Application
 
-See the [Environment Variables](#3-configure-environment-variables) section above for the full list of configurable options. You can tune audio encoding, sample rates, language, STT/LLM/TTS providers and models, greeting message, and keep-alive timing entirely through environment variables.
+### Environment Variables
+
+You can customize the application behavior using the following environment variables:
+
+**Required:**
+
+- `DEEPGRAM_API_KEY`: Your Deepgram API key
+- `AGENT_PROMPT`: The system prompt that defines the AI agent's behavior and personality
+
+**Optional:**
+
+- `PORT`: The port on which the server will listen (default: 6033)
+- `DEEPGRAM_SAMPLE_RATE`: Audio sample rate in Hz (default: 8000)
+- `DEEPGRAM_ASR_MODEL`: Deepgram ASR model (default: nova-3)
+- `DEEPGRAM_TTS_MODEL`: Deepgram TTS model (default: aura-2-thalia-en)
+- `DEEPGRAM_GREETING`: Initial greeting message
+- `OPENAI_MODEL`: OpenAI model for generating responses (default: gpt-4o-mini)
 
 ## Error Handling
 
