@@ -115,11 +115,11 @@ const handleClientConnection = (clientWs) => {
           },
         },
         agent: {
-          language: process.env.DEEPGRAM_LANGUAGE || "en",
           listen: {
             provider: {
               type: process.env.DEEPGRAM_LISTEN_PROVIDER || "deepgram",
               model: process.env.DEEPGRAM_ASR_MODEL || "nova-3",
+              language: process.env.DEEPGRAM_LANGUAGE || "en",
             },
           },
           think: {

@@ -91,6 +91,12 @@ Create a `.env` file in the root of the project (see `.env.example`). The follow
 | `DEEPGRAM_SPEAK_PROVIDER` | Text-to-speech provider (`deepgram`, `eleven_labs`) | `deepgram` |
 | `DEEPGRAM_TTS_MODEL` | TTS model name | `aura-2-thalia-en` |
 
+> **Note:** The TTS model name encodes the language (e.g. `aura-2-thalia-en` for English, `aura-2-melia-it` for Italian). Make sure the model matches the language set in `DEEPGRAM_LANGUAGE`, otherwise the connection will fail.
+>
+> Available Deepgram Aura-2 Italian models (`it`): `aura-2-melia-it`, `aura-2-elio-it`, `aura-2-flavio-it`, `aura-2-maia-it`, `aura-2-cinzia-it`, `aura-2-cesare-it`, `aura-2-livia-it`, `aura-2-perseo-it`, `aura-2-dionisio-it`, `aura-2-demetra-it`
+>
+> Full list of models: [https://developers.deepgram.com/docs/tts-models](https://developers.deepgram.com/docs/tts-models)
+
 **Optional -- Advanced:**
 
 | Variable | Description | Default |
